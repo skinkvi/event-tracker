@@ -1,0 +1,14 @@
+.env 
+
+postgres-data/
+redis-data/
+clickhouse-data/
+rabbitmq-data/
+elasticsearch-data/
+
+*.log
+*.tmp
+
+nginx.conf
+redis.conf
+clickhouse-config.xml

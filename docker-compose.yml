@@ -1,0 +1,89 @@
+version: '3'
+
+services:
+  nginx:
+    container_name: nginx_event_tracker
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    networks:
+      - backend
+  postgres:
+    container_name: postgres_event_tracker
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+  redis:
+    container_name: redis_event_tracker
+    image: redis:latest
+    command: redis-server /etc/redis/redis.conf
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf:ro
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+  clickhouse:
+    container_name: clickhouse_event_tracker
+    image: clickhouse/clickhouse-server:latest
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/config.xml:ro
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB}
+    networks:
+      - backend
+  go-app:
+  rabbitmq:
+    container_name: rabbitmq_event_tracker
+    image: rabbitmq:management
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+  elasticsearch:
+    container_name: elasticsearch_event_tracker
+    image: elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=Xms512m -Xms512m
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - backend
+
+
+networks:
+  backend:
+    driver: bridge
+
+
+volumes:
+  postgres-data:
+  redis-data:
+  clickhouse-data:
+  rabbitmq-data:
+  elasticsearch-data:
