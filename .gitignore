@@ -1,4 +1,4 @@
-.env 
+*.env 
 
 postgres-data/
 redis-data/
@@ -12,3 +12,4 @@ elasticsearch-data/
 nginx.conf
 redis.conf
 clickhouse-config.xml
+local.yaml
