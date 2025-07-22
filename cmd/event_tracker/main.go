@@ -29,8 +29,6 @@ func main() {
 	}
 
 	log.Info("storage init")
-
-	//TODO: something else
 }
 
 // мы выносим потому что логи должны быть разные в зависимости от окружения либо local, prod и т.д.

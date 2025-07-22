@@ -15,10 +15,23 @@ type Storage struct {
 func New(ctx context.Context, cfg config.Config) (*Storage, error) {
 	const fn = "storage.postgres.New"
 
-	pool, err := pgxpool.New(ctx, cfg.PostgresURL)
+	config, err := pgxpool.ParseConfig(cfg.PostgresURL)
 	if err != nil {
-		return nil, fmt.Errorf("fn: %v. failed connect to postgres, err: %s", fn, err)
+		return nil, fmt.Errorf("%s, %w", fn, err)
 	}
 
-	return &Storage{db: pool}, nil
+	db, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("%s, %w", fn, err)
+	}
+
+	return &Storage{db: db}, nil
+}
+
+func (s *Storage) Close() {
+	s.db.Close()
+}
+
+func (s *Storage) Get() *pgxpool.Pool {
+	return s.db
 }
