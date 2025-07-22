@@ -9,9 +9,10 @@ import (
 )
 
 type Config struct {
-	Env         string `yaml:"env" env-required:"true"`
-	PostgresURL string `yaml:"postgres_url" env-required:"true"`
-	HTTPServer  `yaml:"http_server"`
+	Env           string `yaml:"env" env-required:"true"`
+	PostgresURL   string `yaml:"postgres_url" env-required:"true"`
+	ClickHouseDSN string `yaml:"clickhouse_dns" env-required:"true"`
+	HTTPServer    `yaml:"http_server"`
 }
 
 type HTTPServer struct {

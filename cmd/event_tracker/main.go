@@ -5,8 +5,10 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/jackc/tern/v2/migrate"
 	"github.com/skinkvi/event-tracker/internal/config"
 	"github.com/skinkvi/event-tracker/internal/logger"
+	"github.com/skinkvi/event-tracker/internal/storage/clickhouse"
 	"github.com/skinkvi/event-tracker/internal/storage/postgres"
 )
 
@@ -23,12 +25,45 @@ func main() {
 
 	ctx := context.Background()
 
-	storage, err := postgres.New(ctx, *cfg)
+	postgresStorage, err := postgres.New(ctx, *cfg)
 	if err != nil {
 		return
 	}
 
-	log.Info("storage init")
+	conn, err := postgresStorage.Get().Acquire(ctx)
+	if err != nil {
+		log.Error("failed get conn postgres")
+		return
+	}
+	defer conn.Release()
+
+	migrator, err := migrate.NewMigrator(ctx, conn.Conn(), "schema_version")
+	if err != nil {
+		log.Error("failed create a migrator for postgres")
+		return
+	}
+
+	migrationsDir := "./migrations"
+	if err := migrator.LoadMigrations(os.DirFS(migrationsDir)); err != nil {
+		log.Error("failed to load migration")
+		return
+	}
+
+	if err := migrator.Migrate(ctx); err != nil {
+		log.Error("migration failed")
+		return
+	}
+	log.Info("migrations postgres applied successfully")
+	log.Info("postgres storage init")
+
+	clickhouseStorage, err := clickhouse.New(ctx, *cfg, log)
+	if err != nil {
+		return
+	}
+
+	clickhouseStorage.Migrations(*cfg)
+	log.Info("migrations clickhouse applied successfully")
+	log.Info("clickhouse storage init")
 }
 
 // мы выносим потому что логи должны быть разные в зависимости от окружения либо local, prod и т.д.

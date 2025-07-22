@@ -10,27 +10,27 @@ import (
 )
 
 type Event struct {
-	ID     int
+	ID     uuid.UUID
 	UserID uuid.UUID
 	Type   string
 	// Это типо само событие к примеру "праздник!"
 	Payload string
 }
 
-func (s *Storage) CreateEvent(ctx context.Context, event Event) (int, error) {
+func (s *Storage) CreateEvent(ctx context.Context, event Event) (uuid.UUID, error) {
 	const fn = "storage.postgres.CreateEvent"
 
 	query := `INSERT INTO events (user_id, type, payload) VALUES ($1, $2, $3)`
 
-	var id int
+	var id uuid.UUID
 
 	err := s.db.QueryRow(ctx, query, event.UserID, event.Type, event.Payload).Scan(&id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, fmt.Errorf("%s: nothing was returned from the postgres: %w", fn, err)
+			return uuid.Nil, fmt.Errorf("%s: nothing was returned from the postgres: %w", fn, err)
 		}
 
-		return 0, fmt.Errorf("%s: %w", fn, err)
+		return uuid.Nil, fmt.Errorf("%s: %w", fn, err)
 	}
 
 	return id, nil
